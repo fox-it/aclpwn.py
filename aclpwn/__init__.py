@@ -28,7 +28,7 @@ def main():
     maingroup.add_argument("-t","--to", type=str, default='', metavar='DESTINATION', help="Target object to escalate to (for example a group/domain). Example: computer.domain.local or domain.local")
     maingroup.add_argument("-tt","--to-type", default="Domain", type=str, metavar='TYPE', help="Type of the destination object. Valid values: User/Group/Domain/Computer. Default: domain")
     maingroup.add_argument("-d","--domain", type=str, metavar='DOMAIN', help="The domain to escalate in. If unspecified, you have to provide them in the from/to parameters.")
-    maingroup.add_argument("-a","--algorithm", type=str, default='dijkstra', choices=['dijkstra', 'shortestonly', 'allsimple', 'dijkstra-cypher'], metavar='ALGORITHM', help="Path algorithm to use. Options: shortestonly/dijkstra/dijkstra-cypher/allsimple. For a description, see https://url.link. Default: dijkstra")
+    maingroup.add_argument("-a","--algorithm", type=str, default='dijkstra', choices=['dijkstra', 'shortestonly', 'allsimple', 'dijkstra-cypher'], metavar='ALGORITHM', help="Path algorithm to use. Options: shortestonly/dijkstra/dijkstra-cypher/allsimple. For a description, see https://github.com/fox-it/aclpwn.py/wiki/Pathfinding. Default: dijkstra")
     maingroup.add_argument("-r","--restore", type=str, metavar='FILE', help="Load an aclpwn restore file to revert changes made.")
 
     #DB parameters
