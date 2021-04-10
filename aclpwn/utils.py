@@ -11,7 +11,7 @@ def print_path(record):
     # Iterate the path
     pathtext = '(%s)-' % record['p'].nodes[0].get('name')
     for el in record['p']:
-        pathtext += '[%s]->(%s)-' % (el.type, nmap[el.end].get('name'))
+        pathtext += '[%s]->(%s)-' % (el.type, nmap[el.end_node.id].get('name'))
     pathtext = pathtext[:-1]
     return pathtext
 
@@ -20,7 +20,7 @@ def build_path(record):
     nmap = getnodemap(record['p'].nodes)
     # Iterate the path
     for el in record['p']:
-        path.append((el, nmap[el.end]))
+        path.append((el, nmap[el.end_node.id]))
     return path
 
 def build_rest_path(nodes, rels):

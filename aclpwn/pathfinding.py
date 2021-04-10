@@ -39,7 +39,7 @@ def dijkstra_find(fromid, toid, dbhost):
     return paths
 
 def dijkstra_find_cypher(startnode, endnode, starttype='User', endtype='User'):
-    query = "MATCH (n:%s {name: {startnode}}), (m:%s {name: {endnode}}) " \
+    query = "MATCH (n:%s {name: $startnode}), (m:%s {name: $endnode}) " \
             "CALL algo.shortestPath.stream(n, m, 'aclpwncost', " \
             "{nodeQuery:null, relationshipQuery:null, defaultValue:200.0, direction:'OUTGOING'}) " \
             "YIELD nodeId, cost " \
@@ -60,15 +60,15 @@ def dijkstra_find_cypher(startnode, endnode, starttype='User', endtype='User'):
 
 queries = {
     # Query all shortest paths
-    'shortestonly': "MATCH (n:%s {name: {startnode}}),"
-                    "(m:%s {name: {endnode}}),"
+    'shortestonly': "MATCH (n:%s {name: $startnode}),"
+                    "(m:%s {name: $endnode}),"
                     " p=allShortestPaths((n)-[:MemberOf|AddMember|GenericAll|"
                     "GenericWrite|WriteOwner|WriteDacl|Owns|DCSync|GetChangesAll|AllExtendedRights*1..]->(m))"
                     " RETURN p",
     # Query all simple paths (more expensive query than above)
     # credits to https://stackoverflow.com/a/40062243
-    'allsimple':    "MATCH (n:%s {name: {startnode}}),"
-                    "(m:%s {name: {endnode}}),"
+    'allsimple':    "MATCH (n:%s {name: $startnode}),"
+                    "(m:%s {name: $endnode}),"
                     " p=(n)-[:MemberOf|AddMember|GenericAll|"
                     "GenericWrite|WriteOwner|WriteDacl|Owns|DCSync|GetChangesAll|AllExtendedRights*1..]->(m)"
                     "WHERE ALL(x IN NODES(p) WHERE SINGLE(y IN NODES(p) WHERE y = x))"
@@ -77,11 +77,12 @@ queries = {
 
 
 def get_path(startnode, endnode, starttype='User', endtype='User', querytype='allsimple'):
+    records = []
     with database.driver.session() as session:
         with session.begin_transaction() as tx:
-            return tx.run(queries[querytype] % (starttype, endtype),
-                          startnode=startnode,
-                          endnode=endnode)
+            for record in tx.run(queries[querytype] % (starttype, endtype), startnode=startnode, endnode=endnode):
+                records.append(record)
+    return records
 
 def get_path_cost(record):
     nmap = utils.getnodemap(record['p'].nodes)

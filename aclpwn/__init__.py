@@ -103,7 +103,7 @@ def main():
                 paths = pathfinding.dijkstra_find_cypher(from_object, to_object, args.from_type.capitalize(), args.to_type.capitalize())
             else:
                 # First we need to obtain the node IDs for use with the REST api
-                q = "MATCH (n:%s {name: {name}}) RETURN n"
+                q = "MATCH (n:%s {name: $name}) RETURN n"
                 with database.driver.session() as session:
                     fromres = session.run(q % args.from_type.capitalize(), name=from_object)
                     try:
