@@ -40,21 +40,20 @@ def dijkstra_find(fromid, toid, dbhost):
 
 def dijkstra_find_cypher(startnode, endnode, starttype='User', endtype='User'):
     query = "MATCH (n:%s {name: $startnode}), (m:%s {name: $endnode}) " \
-            "CALL algo.shortestPath.stream(n, m, 'aclpwncost', " \
-            "{nodeQuery:null, relationshipQuery:null, defaultValue:200.0, direction:'OUTGOING'}) " \
-            "YIELD nodeId, cost " \
-            "RETURN nodeId as node, cost"
+            "CALL gds.beta.shortestPath.dijkstra.stream({sourceNode: id(n), targetNode: id(m), " \
+            "relationshipWeightProperty: 'aclpwncost', nodeProjection: '*', relationshipProjection: {" \
+            "all: {type: '*', properties: 'aclpwncost', orientation: 'NATURAL'}}}) " \
+            "YIELD nodeIds, costs " \
+            "RETURN nodeIds, costs"
 
+    path = []
     with database.driver.session() as session:
         with session.begin_transaction() as tx:
-            print(query % (starttype, endtype))
-            path = tx.run(query % (starttype, endtype),
-                          startnode=startnode,
-                          endnode=endnode,
-                          property='aclpwncost')
+            for record in tx.run(query % (starttype, endtype), startnode=startnode, endnode=endnode, property='aclpwncost'):
+                path.append(record)
     paths = []
-    nodes, rels = resolve_dijkstra_path(path)
-    paths.append((nodes, rels, path))
+    nodes, rels = resolve_dijkstra_path(path[0])
+    paths.append((nodes, rels, path[0]))
     return paths
 
 
@@ -94,17 +93,17 @@ def get_path_cost(record):
 def resolve_dijkstra_path(path):
     nodes = []
     rels = []
-    nq = "MATCH (n)-[w {aclpwncost: {cost}}]->(m) WHERE ID(n) = {source} AND ID(m) = {dest} RETURN n,w,m"
-    bnq = "MATCH (n)-[w]->(m) WHERE ID(n) = {source} AND ID(m) = {dest} RETURN n,w,m"
+    nq = "MATCH (n)-[w {aclpwncost: $cost}]->(m) WHERE ID(n) = $source AND ID(m) = $dest RETURN n,w,m"
+    bnq = "MATCH (n)-[w]->(m) WHERE ID(n) = $source AND ID(m) = $dest RETURN n,w,m"
     with database.driver.session() as session:
         with session.begin_transaction() as tx:
             pv = path.values()
-            for i in range(1, len(pv)):
-                res = tx.run(nq, source=pv[i-1][0], cost=pv[i][1]-pv[i-1][1], dest=pv[i][0])
+            for i in range(1, len(pv[0])):
+                res = tx.run(nq, source=pv[0][i-1], cost=pv[1][i]-pv[1][i-1], dest=pv[0][i])
                 data = res.single()
                 # No result, most likely an invalid path, but query for a relationship with any cost regardless
                 if not data:
-                    res = tx.run(bnq, source=pv[i-1][0], dest=pv[i][0])
+                    res = tx.run(bnq, source=pv[0][i-1], dest=pv[0][i])
                     data = res.single()
                 nodes.append(data['n'])
                 rels.append(data['w'])
