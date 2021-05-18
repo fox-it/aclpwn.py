@@ -30,6 +30,7 @@ def dijkstra_find(fromid, toid, dbhost):
       "cost_property": "aclpwncost",
       "default_cost": 1
     }
+    print(fromid)
     resp = database.restapi.post('http://%s:7474/db/data/node/%s/paths' % (dbhost, fromid), json=data)
     data = resp.json()
     paths = []
@@ -52,8 +53,9 @@ def dijkstra_find_cypher(startnode, endnode, starttype='User', endtype='User'):
             for record in tx.run(query % (starttype, endtype), startnode=startnode, endnode=endnode, property='aclpwncost'):
                 path.append(record)
     paths = []
-    nodes, rels = resolve_dijkstra_path(path[0])
-    paths.append((nodes, rels, path[0]))
+    if path:
+        nodes, rels = resolve_dijkstra_path(path[0])
+        paths.append((nodes, rels, path[0]))
     return paths
 
 
