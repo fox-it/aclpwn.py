@@ -30,7 +30,6 @@ def dijkstra_find(fromid, toid, dbhost):
       "cost_property": "aclpwncost",
       "default_cost": 1
     }
-    print(fromid)
     resp = database.restapi.post('http://%s:7474/db/data/node/%s/paths' % (dbhost, fromid), json=data)
     data = resp.json()
     paths = []
