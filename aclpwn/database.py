@@ -1,5 +1,5 @@
 from __future__ import unicode_literals, print_function
-from neo4j.v1 import GraphDatabase
+from neo4j import GraphDatabase
 import platform
 import requests
 import json
